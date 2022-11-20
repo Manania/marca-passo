@@ -1,6 +1,5 @@
 package com.marcacorrida.registro;
 
-import android.app.Activity;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -14,6 +13,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
 import android.os.Handler;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -35,12 +35,13 @@ public class GravarCorridaFragment extends Fragment {
     long tMilliSec, tStart, tBuff;
     private int totalPassos;
     private boolean isResume;
-    Chronometer chronometer;
+    Chronometer chronometer; //Como os métodos de contagem e formatação do Chronometo não são utilizados, poderia ser substituido por uma TextView
     private TextView tvTotalPassos;
     ImageButton btStart, btStop, btRefresh;
     private SensorManager sensorManager;
     private Sensor stepDetectorSensor;
     Handler handler;
+    //Objeto que é chamado toda vez que eventos do sensor ocorre
     private SensorEventListener stepDetectorSensorListener = new SensorEventListener() {
         @Override
         public void onSensorChanged(SensorEvent sensorEvent) {
@@ -51,7 +52,12 @@ public class GravarCorridaFragment extends Fragment {
         @Override
         public void onAccuracyChanged(Sensor sensor, int i) { }
     };
-    private Runnable clockThread = new Runnable() {
+
+    /**
+     * Atualiza o cronometro.
+     * É possivel controlar a frequencia alterando o atraso entre reagendamentos
+     */
+    private Runnable updateClock = new Runnable() {
         @Override
         public void run() {
             tMilliSec = SystemClock.uptimeMillis() - tStart;
@@ -61,7 +67,7 @@ public class GravarCorridaFragment extends Fragment {
             sec = sec % 60;
             int milliSec = (int) (tUpdate%100);
             chronometer.setText(String.format("%02d",min) + ":" + String.format("%02d", sec) + ":" + String.format("%02d", milliSec));
-            handler.postDelayed(this, 60);
+            handler.postDelayed(this, 60); //16hz
         }
     };
 
@@ -96,7 +102,7 @@ public class GravarCorridaFragment extends Fragment {
 
         sensorManager = (SensorManager) getContext().getSystemService(Context.SENSOR_SERVICE);
         stepDetectorSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
-        handler = new Handler();
+        handler = new Handler(Looper.getMainLooper());
         btStart.setOnClickListener((btn) -> { startRecording(); });
         btRefresh.setOnClickListener((btn) -> { reset(); });
         btStop.setVisibility(View.GONE);
@@ -110,13 +116,13 @@ public class GravarCorridaFragment extends Fragment {
     public void startRecording() {
         if (!isResume) {
             tStart = SystemClock.uptimeMillis();
-            handler.postDelayed(clockThread, 0);
+            handler.post(updateClock);
             isResume = true;
             btStart.setImageResource(R.drawable.ic_pause);
             sensorManager.registerListener(stepDetectorSensorListener, stepDetectorSensor, SensorManager.SENSOR_DELAY_NORMAL);
         } else {
             tBuff += tMilliSec;
-            handler.removeCallbacks(clockThread);
+            handler.removeCallbacks(updateClock);
             isResume = false;
             btStart.setImageResource(R.drawable.ic_play);
             sensorManager.unregisterListener(stepDetectorSensorListener, stepDetectorSensor);
@@ -142,20 +148,18 @@ public class GravarCorridaFragment extends Fragment {
      * Cria uma nova thread para salvar a sessão atual.
      * Tecnicamente, é recomendável extrair trabalhos pesados, como acesso a banco de dados, da thread
      * principal para manter a responsividade.
-     * Mas eu fiz isso por causa do AlertDialog.
+     * Mas eu fiz isso por causa da assincronia de AlertDialog.
      */
     private void salvar() {
         Corrida corrida = new Corrida(null, totalPassos, tMilliSec, new Date(System.currentTimeMillis()));
-        new Thread(new SalvarCorridaTask(corrida, getActivity())).start();
+        new Thread(new SalvarCorridaTask(corrida)).start();
     }
 
     private class SalvarCorridaTask implements Runnable {
         private final Corrida corrida;
-        private final Activity activity;
 
-        SalvarCorridaTask(Corrida corrida, Activity activity) {
+        SalvarCorridaTask(Corrida corrida) {
             this.corrida = corrida;
-            this.activity = activity;
         }
 
         @Override
@@ -176,13 +180,13 @@ public class GravarCorridaFragment extends Fragment {
             nomeDialog.setView(layout);
             nomeDialog.setNegativeButton("Cancelar", (dialogInterface, btn_id) -> dialogInterface.cancel() );
             nomeDialog.setPositiveButton("Confirmar", (dialogInterface, btn_id) -> {
-                corrida.setNome(edtTxt.getText().toString());
-                salvar();
+                salvar(edtTxt.getText().toString());
             });
-            activity.runOnUiThread( () -> nomeDialog.show() ); //A renderização sempre ocorre na thread da activity
+            new Handler(Looper.getMainLooper()).post( () -> nomeDialog.show() ); //A renderização sempre ocorre na thread principal.
         }
 
-        private void salvar() {
+        private void salvar(String nome) {
+            corrida.setNome(nome);
             try(CorridaRepository repository = new CorridaRepository(getContext())) {
                 repository.criar(corrida);
             } catch (IOException e) {

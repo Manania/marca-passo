@@ -53,14 +53,15 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch(item.getItemId()){
+            //Compartilha o historico em formato JSON
             case R.id.action_share:
                 try(CorridaRepository repository = new CorridaRepository(this)) {
                     String export = repository.listar().toString();
                     Intent sendIntent = new Intent();
                     sendIntent.setAction(Intent.ACTION_SEND);
                     sendIntent.putExtra(Intent.EXTRA_TEXT, export);
-                    sendIntent.setType("text/plain");
-                    Intent shareIntent = Intent.createChooser(sendIntent, null);
+                    sendIntent.setType("text/plain"); //Especifica o formato de arquivo
+                    Intent shareIntent = Intent.createChooser(sendIntent, null); //O usuário escolhe o aplicativo consumidor
                     startActivity(shareIntent);
                 } catch (IOException e) {
                     e.printStackTrace();
