@@ -1,17 +1,14 @@
 package com.marcacorrida.registro;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Build;
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
-import androidx.fragment.app.Fragment;
-
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
@@ -24,6 +21,13 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+
 import com.marcacorrida.R;
 import com.marcacorrida.datasource.CorridaRepository;
 import com.marcacorrida.model.Corrida;
@@ -33,40 +37,43 @@ import java.util.Date;
 
 public class GravarCorridaFragment extends Fragment {
     long tMilliSec, tStart, tBuff;
-    private int totalPassos;
+    private int passoInicial, totalPassos;
     private boolean isResume;
     Chronometer chronometer; //Como os métodos de contagem e formatação do Chronometo não são utilizados, poderia ser substituido por uma TextView
     private TextView tvTotalPassos;
     ImageButton btStart, btStop, btRefresh;
     private SensorManager sensorManager;
-    private Sensor stepDetectorSensor;
+    private Sensor stepCounterSensor;
     Handler handler;
-    //Objeto que é chamado toda vez que eventos do sensor ocorre
-    private SensorEventListener stepDetectorSensorListener = new SensorEventListener() {
+    private final SensorEventListener stepCounterSensorListener = new SensorEventListener() {
         @Override
         public void onSensorChanged(SensorEvent sensorEvent) {
-            totalPassos += sensorEvent.values[0];
+            if (passoInicial == 0) {
+                passoInicial = (int) sensorEvent.values[0];
+            }
+            totalPassos = (int) sensorEvent.values[0] - passoInicial;
             tvTotalPassos.setText(String.valueOf(totalPassos));
         }
 
         @Override
-        public void onAccuracyChanged(Sensor sensor, int i) { }
+        public void onAccuracyChanged(Sensor sensor, int i) {
+        }
     };
 
     /**
      * Atualiza o cronometro.
      * É possivel controlar a frequencia alterando o atraso entre reagendamentos
      */
-    private Runnable updateClock = new Runnable() {
+    private final Runnable updateClock = new Runnable() {
         @Override
         public void run() {
             tMilliSec = SystemClock.uptimeMillis() - tStart;
             long tUpdate = tBuff + tMilliSec;
-            int sec = (int) (tUpdate/1000);
+            int sec = (int) (tUpdate / 1000);
             int min = sec / 60;
             sec = sec % 60;
-            int milliSec = (int) (tUpdate%100);
-            chronometer.setText(String.format("%02d",min) + ":" + String.format("%02d", sec) + ":" + String.format("%02d", milliSec));
+            int milliSec = (int) (tUpdate % 100);
+            chronometer.setText(String.format("%02d", min) + ":" + String.format("%02d", sec) + ":" + String.format("%02d", milliSec));
             handler.postDelayed(this, 60); //16hz
         }
     };
@@ -101,11 +108,24 @@ public class GravarCorridaFragment extends Fragment {
         btRefresh = view.findViewById(R.id.bt_refresh);
 
         sensorManager = (SensorManager) getContext().getSystemService(Context.SENSOR_SERVICE);
-        stepDetectorSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
+        stepCounterSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
         handler = new Handler(Looper.getMainLooper());
-        btStart.setOnClickListener((btn) -> { startRecording(); });
-        btRefresh.setOnClickListener((btn) -> { reset(); });
+        btStart.setOnClickListener((btn) -> {
+            startRecording();
+        });
+        btRefresh.setOnClickListener((btn) -> {
+            reset();
+        });
         btStop.setVisibility(View.GONE);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) { //O sensor de passos requer essa permissão no android 10+
+            if (ContextCompat.checkSelfPermission(
+                    getContext(), Manifest.permission.ACTIVITY_RECOGNITION) == PackageManager.PERMISSION_DENIED) {
+                registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                })
+                        .launch(Manifest.permission.ACTIVITY_RECOGNITION);
+            }
+        }
     }
 
     @Override
@@ -119,27 +139,28 @@ public class GravarCorridaFragment extends Fragment {
             handler.post(updateClock);
             isResume = true;
             btStart.setImageResource(R.drawable.ic_pause);
-            sensorManager.registerListener(stepDetectorSensorListener, stepDetectorSensor, SensorManager.SENSOR_DELAY_NORMAL);
+            sensorManager.registerListener(stepCounterSensorListener, stepCounterSensor, SensorManager.SENSOR_DELAY_FASTEST);
         } else {
             tBuff += tMilliSec;
             handler.removeCallbacks(updateClock);
             isResume = false;
             btStart.setImageResource(R.drawable.ic_play);
-            sensorManager.unregisterListener(stepDetectorSensorListener, stepDetectorSensor);
+            sensorManager.unregisterListener(stepCounterSensorListener, stepCounterSensor);
         }
     }
 
     private void reset() {
-        if(!isResume) {
-            if(tMilliSec > 0) {
+        if (!isResume) {
+            if (tMilliSec > 0) {
                 salvar();
             }
             btStart.setImageResource(R.drawable.ic_play);
             tMilliSec = 0L;
             tStart = 0L;
             tBuff = 0L;
+            totalPassos = 0;
+            passoInicial = 0;
             chronometer.setText("00:00:00");
-            sensorManager.unregisterListener(stepDetectorSensorListener, stepDetectorSensor);
             tvTotalPassos.setText("0");
         }
     }
@@ -178,16 +199,16 @@ public class GravarCorridaFragment extends Fragment {
             layout.addView(edtTxt);
             layout.setOrientation(LinearLayout.VERTICAL);
             nomeDialog.setView(layout);
-            nomeDialog.setNegativeButton("Cancelar", (dialogInterface, btn_id) -> dialogInterface.cancel() );
+            nomeDialog.setNegativeButton("Cancelar", (dialogInterface, btn_id) -> dialogInterface.cancel());
             nomeDialog.setPositiveButton("Confirmar", (dialogInterface, btn_id) -> {
                 salvar(edtTxt.getText().toString());
             });
-            new Handler(Looper.getMainLooper()).post( () -> nomeDialog.show() ); //A renderização sempre ocorre na thread principal.
+            new Handler(Looper.getMainLooper()).post(nomeDialog::show); //A renderização sempre ocorre na thread principal.
         }
 
         private void salvar(String nome) {
             corrida.setNome(nome);
-            try(CorridaRepository repository = new CorridaRepository(getContext())) {
+            try (CorridaRepository repository = new CorridaRepository(getContext())) {
                 repository.criar(corrida);
             } catch (IOException e) {
                 e.printStackTrace();
