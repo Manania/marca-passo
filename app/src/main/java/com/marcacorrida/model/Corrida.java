@@ -1,7 +1,13 @@
 package com.marcacorrida.model;
 
 
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.Locale;
 
 public class Corrida {
 	private String nome;
@@ -57,11 +63,22 @@ public class Corrida {
 
 	@Override
 	public String toString() {
-		return "{ " +
-				"nome\"=\"" + nome + '\"' +
-				", \"numPassos\"=" + numPassos +
-				", \"duracao\"=" + duracao +
-				", \"data\"=" + '\"' + data + '\"' +
-				" }";
+		StringBuilder builder = new StringBuilder();
+		builder.append("{");
+		builder.append("nome\"=");
+		builder.append('\"');
+		builder.append(nome);
+		builder.append('\"');
+		builder.append(", \"numPassos\"=");
+		builder.append(numPassos);
+		builder.append(", \"duracao\"=");
+		builder.append(duracao);
+		builder.append(", \"data\"=");
+		builder.append('\"');
+		builder.append(DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(
+						ZonedDateTime.ofInstant( data.toInstant(), ZoneId.systemDefault() )));
+		builder.append('\"');
+		builder.append(" }");
+		return builder.toString();
 	}
 }
