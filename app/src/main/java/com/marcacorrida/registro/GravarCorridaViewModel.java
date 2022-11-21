@@ -4,6 +4,8 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
@@ -26,6 +28,7 @@ public class GravarCorridaViewModel extends ViewModel {
     private final MutableLiveData<Long> sessionTime;
     private final MutableLiveData<Integer> sessionSteps;
     private final MutableLiveData<Boolean> isPaused;
+    private MutableLiveData<Float> currentSpeed;
 
     private long tempoAtual, instanteInicial, tempoAcumulado;
     private int passoAtual, passoInicial, passoAcumulado;
@@ -36,7 +39,10 @@ public class GravarCorridaViewModel extends ViewModel {
     private final Runnable updateClock;
     private final CorridaRepository repository;
 
-    public GravarCorridaViewModel(SensorManager sensorManager, CorridaRepository repository) {
+    private final LocationManager locationManager;
+    private final LocationListener locationListener;
+
+    public GravarCorridaViewModel(SensorManager sensorManager, CorridaRepository repository, LocationManager locationManager) {
         this.sensorManager = sensorManager;
         this.stepCounterSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
         this.repository = repository;
@@ -52,7 +58,7 @@ public class GravarCorridaViewModel extends ViewModel {
         stepCounterSensorListener = new SensorEventListener() {
             @Override
             public void onSensorChanged(SensorEvent sensorEvent) {
-                if(passoInicial == 0) {
+                if (passoInicial == 0) {
                     passoInicial = (int) sensorEvent.values[0];
                 }
                 passoAtual = ((int) sensorEvent.values[0]) - passoInicial;
@@ -60,12 +66,25 @@ public class GravarCorridaViewModel extends ViewModel {
             }
 
             @Override
-            public void onAccuracyChanged(Sensor sensor, int i) {}
+            public void onAccuracyChanged(Sensor sensor, int i) {
+            }
         };
         sessionTime = new MutableLiveData<>();
+        sessionTime.setValue(0L);
         sessionSteps = new MutableLiveData<>();
+        sessionSteps.setValue(0);
         isPaused = new MutableLiveData<>();
         isPaused.setValue(true);
+
+        currentSpeed = new MutableLiveData<>();
+        currentSpeed.setValue(0f);
+        this.locationManager = locationManager;
+
+
+        locationListener = (location) -> {
+            currentSpeed.setValue(location.getSpeed());
+        };
+
     }
 
     @NotNull
@@ -83,12 +102,24 @@ public class GravarCorridaViewModel extends ViewModel {
         return isPaused;
     }
 
+    @NotNull
+    public  LiveData<Float> getCurrentSpeed() {
+        return currentSpeed;
+    }
+
     public void startRecord() {
         isPaused.setValue(false);
         instanteInicial = SystemClock.uptimeMillis();
         passoInicial = 0;
         handler.post(updateClock);
         sensorManager.registerListener(stepCounterSensorListener, stepCounterSensor, SensorManager.SENSOR_DELAY_FASTEST);
+
+        locationManager.requestLocationUpdates(
+                LocationManager.GPS_PROVIDER,
+                16,
+                1,
+                locationListener
+        );
     }
 
     public void pauseRecord() {
@@ -99,6 +130,9 @@ public class GravarCorridaViewModel extends ViewModel {
         passoAtual = 0;
         handler.removeCallbacks(updateClock);
         sensorManager.unregisterListener(stepCounterSensorListener, stepCounterSensor);
+
+        locationManager.removeUpdates(locationListener);
+        currentSpeed.setValue(0f);
     }
 
     public void endRecord() {
@@ -111,6 +145,9 @@ public class GravarCorridaViewModel extends ViewModel {
         passoAcumulado = 0;
         sessionTime.setValue(0L);
         sessionSteps.setValue(0);
+
+        locationManager.removeUpdates(locationListener);
+        currentSpeed.setValue(0f);
     }
 
     public void saveRecord(String name) {
@@ -120,19 +157,21 @@ public class GravarCorridaViewModel extends ViewModel {
 
     public static class ViewModelFactory implements ViewModelProvider.Factory {
         private final CorridaRepository repository;
-        private final SensorManager manager;
+        private final SensorManager sensorManager;
+        private final LocationManager locationManager;
 
-        public ViewModelFactory(CorridaRepository repository, SensorManager manager) {
+        public ViewModelFactory(CorridaRepository repository, SensorManager sensorManager, LocationManager locationManager) {
             this.repository = repository;
-            this.manager = manager;
+            this.sensorManager = sensorManager;
+            this.locationManager = locationManager;
         }
 
         @NonNull
         @Override
         public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
             try {
-                    return modelClass.getConstructor(SensorManager.class, CorridaRepository.class)
-                            .newInstance(manager, repository);
+                    return modelClass.getConstructor(SensorManager.class, CorridaRepository.class, LocationManager.class)
+                            .newInstance(sensorManager, repository, locationManager);
             } catch (IllegalAccessException |
                     InstantiationException |
                     InvocationTargetException|

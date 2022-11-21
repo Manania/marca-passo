@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.hardware.SensorManager;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -33,7 +34,7 @@ import java.util.Locale;
 
 public class GravarCorridaFragment extends Fragment {
     private Chronometer chronometer; //Como os métodos de contagem e formatação do Chronometo não são utilizados, poderia ser substituido por uma TextView
-    private TextView tvTotalPassos;
+    private TextView tvTotalPassos, tvVelocidadeAtual;
     private ImageButton btStart, btStop, btRefresh;
     private GravarCorridaViewModel model;
 
@@ -50,7 +51,8 @@ public class GravarCorridaFragment extends Fragment {
         super.onCreate(savedInstanceState);
         model = new ViewModelProvider(this, new GravarCorridaViewModel.ViewModelFactory(
                 new CorridaRepository(getContext()),
-                (SensorManager) getContext().getSystemService(Context.SENSOR_SERVICE)
+                (SensorManager) getContext().getSystemService(Context.SENSOR_SERVICE),
+                (LocationManager) getContext().getSystemService(Context.LOCATION_SERVICE)
                 )).get(GravarCorridaViewModel.class);
     }
 
@@ -68,6 +70,7 @@ public class GravarCorridaFragment extends Fragment {
         btStart = view.findViewById(R.id.bt_start);
         btStop = view.findViewById(R.id.bt_stop);
         btRefresh = view.findViewById(R.id.bt_refresh);
+        tvVelocidadeAtual = view.findViewById(R.id.tvVelocidadeAtual);
         btStop.setVisibility(View.GONE);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) { //O sensor de passos requer essa permissão no android 10+
@@ -77,7 +80,20 @@ public class GravarCorridaFragment extends Fragment {
                 })
                         .launch(Manifest.permission.ACTIVITY_RECOGNITION);
             }
+            if (ContextCompat.checkSelfPermission(
+                    getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_DENIED) {
+                registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                })
+                        .launch(Manifest.permission.ACCESS_COARSE_LOCATION);
+            }
+            if (ContextCompat.checkSelfPermission(
+                    getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED) {
+                registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                })
+                        .launch(Manifest.permission.ACCESS_FINE_LOCATION);
+            }
         }
+
 
         btStart.setOnClickListener( (btn) -> {
             if (model.getIsPaused().getValue()) {
@@ -111,9 +127,14 @@ public class GravarCorridaFragment extends Fragment {
             btStart.setImageResource( isPaused ? R.drawable.ic_play : R.drawable.ic_pause );
         };
 
+        final Observer<Float> speedObserver = (speed) -> {
+            tvVelocidadeAtual.setText(String.format(Locale.ENGLISH, "%f", speed));
+        };
+
         model.getsessionSteps().observe(getViewLifecycleOwner(), stepObserver);
         model.getSessionTime().observe(getViewLifecycleOwner(), timeObserver);
         model.getIsPaused().observe(getViewLifecycleOwner(), pauseObserver);
+        model.getCurrentSpeed().observe(getViewLifecycleOwner(), speedObserver);
     }
 
     private void showDialog() {
