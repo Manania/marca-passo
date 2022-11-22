@@ -49,7 +49,7 @@ public class GravarCorridaFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         model = new ViewModelProvider(this, new GravarCorridaViewModel.ViewModelFactory(
-                new CorridaRepository(getContext()),
+                new CorridaRepository(getActivity().getApplicationContext()),
                 (SensorManager) getContext().getSystemService(Context.SENSOR_SERVICE)
                 )).get(GravarCorridaViewModel.class);
     }

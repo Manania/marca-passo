@@ -19,6 +19,7 @@ import com.marcacorrida.model.Corrida;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
 
@@ -141,5 +142,15 @@ public class GravarCorridaViewModel extends ViewModel {
                 return null;
             }
         }
+    }
+
+    @Override
+    protected void onCleared() {
+        try {
+            repository.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        super.onCleared();
     }
 }
