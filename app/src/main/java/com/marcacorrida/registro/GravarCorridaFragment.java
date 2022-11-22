@@ -34,7 +34,7 @@ import java.util.Locale;
 public class GravarCorridaFragment extends Fragment {
     private Chronometer chronometer; //Como os métodos de contagem e formatação do Chronometo não são utilizados, poderia ser substituido por uma TextView
     private TextView tvTotalPassos;
-    private ImageButton btStart, btStop, btRefresh;
+    private ImageButton btStart, btRefresh;
     private GravarCorridaViewModel model;
 
     public GravarCorridaFragment() {
@@ -66,9 +66,7 @@ public class GravarCorridaFragment extends Fragment {
         tvTotalPassos = view.findViewById(R.id.tvTotalPassos);
         chronometer = view.findViewById(R.id.chronometer);
         btStart = view.findViewById(R.id.bt_start);
-        btStop = view.findViewById(R.id.bt_stop);
         btRefresh = view.findViewById(R.id.bt_refresh);
-        btStop.setVisibility(View.GONE);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) { //O sensor de passos requer essa permissão no android 10+
             if (ContextCompat.checkSelfPermission(
