@@ -3,30 +3,34 @@ package com.marcacorrida.ui;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
-import androidx.viewpager2.adapter.FragmentStateAdapter;
-import androidx.viewpager2.widget.ViewPager2;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.navigation.NavController;
+import androidx.navigation.fragment.NavHostFragment;
+import androidx.navigation.ui.AppBarConfiguration;
+import androidx.navigation.ui.NavigationUI;
 
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.google.android.material.tabs.TabLayout;
-import com.google.android.material.tabs.TabLayoutMediator;
+
+
+import com.google.android.material.navigation.NavigationView;
+
+
+
 import com.marcacorrida.datasource.CorridaRepository;
-import com.marcacorrida.registro.GravarCorridaFragment;
+
 import com.marcacorrida.R;
-import com.marcacorrida.historico.HistoricoFragment;
+
 
 import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
-    private static final int NUM_PAGES = 2;
-    private ViewPager2 viewPager;
-    private FragmentStateAdapter pagerAdapter;
+    private NavHostFragment navHostFragment;
+    private NavController navController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,15 +38,20 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         Toolbar toolbar = findViewById(R.id.mainBar);
+        DrawerLayout drawerLayout = findViewById(R.id.drawer_layout);
+        NavigationView navView = findViewById(R.id.nav_view);
+        navHostFragment = (NavHostFragment) getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
+
+        navController = navHostFragment.getNavController();
+        AppBarConfiguration appBarConfiguration =
+                new AppBarConfiguration.Builder(navController.getGraph())
+                        .setOpenableLayout(drawerLayout)
+                        .build();
+
+
         setSupportActionBar(toolbar);
-        viewPager = findViewById(R.id.pager);
-        pagerAdapter = new ScreenSlidePagerAdapter(this, NUM_PAGES);
-        viewPager.setAdapter(pagerAdapter);
-        viewPager.setOrientation(ViewPager2.ORIENTATION_HORIZONTAL);
-        TabLayout tabLayout = findViewById(R.id.tab_layout);
-        new TabLayoutMediator(tabLayout, viewPager,
-                (tab, position) -> tab.setText(position == 0 ? "Relógio" : "Histórico")
-        ).attach();
+        NavigationUI.setupWithNavController(toolbar, navController, appBarConfiguration);
+        NavigationUI.setupWithNavController(navView, navController);
     }
 
     @Override
@@ -53,65 +62,22 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch(item.getItemId()){
+        if(item.getItemId() == R.id.action_share) {
             //Compartilha o historico em formato JSON
-            case R.id.action_share:
-                try(CorridaRepository repository = new CorridaRepository(this)) {
-                    String export = repository.listar().toString();
-                    Intent sendIntent = new Intent();
-                    sendIntent.setAction(Intent.ACTION_SEND);
-                    sendIntent.putExtra(Intent.EXTRA_TEXT, export);
-                    sendIntent.setType("text/plain"); //Especifica o formato de arquivo
-                    Intent shareIntent = Intent.createChooser(sendIntent, null); //O usuário escolhe o aplicativo consumidor
-                    startActivity(shareIntent);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (viewPager.getCurrentItem() == 0) {
-            super.onBackPressed();
-        } else {
-            viewPager.setCurrentItem(viewPager.getCurrentItem() - 1);
-        }
-    }
-
-    @Override
-    public void onConfigurationChanged(@NonNull Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            getSupportActionBar().hide();
-        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
-            getSupportActionBar().show();
-        }
-    }
-
-    private class ScreenSlidePagerAdapter extends FragmentStateAdapter {
-        private final int ITEM_COUNT;
-        public ScreenSlidePagerAdapter(FragmentActivity fragment, final int itemCount) {
-            super(fragment);
-            this.ITEM_COUNT = itemCount;
-        }
-
-        @Override
-        public Fragment createFragment(int position) {
-            if(position == 0) {
-                return new GravarCorridaFragment();
-            } else {
-                return new HistoricoFragment();
+            try(CorridaRepository repository = new CorridaRepository(getApplicationContext())) {
+                String export = repository.listar().toString();
+                Intent sendIntent = new Intent();
+                sendIntent.setAction(Intent.ACTION_SEND);
+                sendIntent.putExtra(Intent.EXTRA_TEXT, export);
+                sendIntent.setType("text/plain"); //Especifica o formato de arquivo
+                Intent shareIntent = Intent.createChooser(sendIntent, null); //O usuário escolhe o aplicativo consumidor
+                startActivity(shareIntent);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
+            return true;
         }
-
-        @Override
-        public int getItemCount() {
-            return ITEM_COUNT;
-        }
+        return NavigationUI.onNavDestinationSelected(item, navController) ||
+                        super.onOptionsItemSelected(item);
     }
-
 }

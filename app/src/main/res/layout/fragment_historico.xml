@@ -10,7 +10,7 @@
         android:id="@+id/tv_historico_titulo"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Historico"
+        android:text="@string/title_historico_fragment"
         android:textAlignment="center"
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"

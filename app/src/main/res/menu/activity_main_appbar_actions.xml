@@ -4,7 +4,7 @@
 
     <item
         android:id="@+id/action_share"
-        android:title="Compartilhar"
+        android:title="@string/share"
         app:showAsAction="never"/>
 
 </menu>

@@ -4,4 +4,9 @@
     <string name="title_activity_tab">TabActivity</string>
     <string name="tab_text_1">Tab 1</string>
     <string name="tab_text_2">Tab 2</string>
+
+    <string name="title_gravar_corrida_fragment">Corrida</string>
+    <string name="title_historico_fragment">Histórico</string>
+    <string name="share">Compartilhar</string>
+
 </resources>
