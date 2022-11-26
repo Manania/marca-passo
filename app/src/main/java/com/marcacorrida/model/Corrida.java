@@ -2,10 +2,12 @@ package com.marcacorrida.model;
 
 
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Locale;
 
@@ -72,7 +74,7 @@ public class Corrida {
 		builder.append(", \"numPassos\"=");
 		builder.append(numPassos);
 		builder.append(", \"duracao\"=");
-		builder.append(duracao);
+		builder.append( Duration.of(duracao, ChronoUnit.MILLIS).toString() );
 		builder.append(", \"data\"=");
 		builder.append('\"');
 		builder.append(DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(

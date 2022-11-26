@@ -10,8 +10,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import com.marcacorrida.R;
 import com.marcacorrida.model.Corrida;
@@ -38,10 +43,22 @@ public class CorridaAdapter extends RecyclerView.Adapter<CorridaAdapter.CorridaV
             Corrida item = dataSet.get(position -1);
             holder.getTxtVwNome().setText( item.getNome() );
             holder.getTxtVwPassos().setText( String.valueOf( item.getNumPassos() ) );
-            holder.getTxtVwDuracao().setText( String.valueOf( item.getDuracao() /  1000f ) );
+            //holder.getTxtVwDuracao().setText( String.valueOf( item.getDuracao() /  1000f ) );
+            holder.getTxtVwDuracao().setText( formatDuration(item.getDuracao()) );
             holder.getTxtVwData().setText(DDMMYY_FORMATER.format(item.getData()));
         }
 
+    }
+
+    private static String formatDuration(long millis) {
+        final int H = 3600000, M = 60000, S = 1000;
+        long h = millis / H;
+        millis -= h * H;
+        long m = millis / M;
+        millis -= m * M;
+        long s = millis / S;
+        millis -= s * S;
+        return String.format(Locale.ENGLISH, "%d:%d:%d.%d", h, m, s, millis);
     }
 
     @Override
