@@ -67,6 +67,8 @@ public class GravarCorridaViewModel extends ViewModel {
         sessionSteps = new MutableLiveData<>();
         isPaused = new MutableLiveData<>();
         isPaused.setValue(true);
+        sessionTime.setValue(0L);
+        sessionSteps.setValue(0);
     }
 
     @NotNull
