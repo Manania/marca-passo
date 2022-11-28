@@ -2,6 +2,7 @@ package com.marcacorrida.registro;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.hardware.SensorManager;
 import android.os.Build;
@@ -23,12 +24,12 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.preference.PreferenceManager;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.marcacorrida.R;
 import com.marcacorrida.datasource.CorridaRepository;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Locale;
 
 public class GravarCorridaFragment extends Fragment {
@@ -36,13 +37,13 @@ public class GravarCorridaFragment extends Fragment {
     private TextView tvTotalPassos;
     private ImageButton btStart, btRefresh;
     private GravarCorridaViewModel model;
+    private boolean alwaysSave, neverSave;
 
     public GravarCorridaFragment() {
     }
 
     public static GravarCorridaFragment newInstance() {
-        GravarCorridaFragment fragment = new GravarCorridaFragment();
-        return fragment;
+        return new GravarCorridaFragment();
     }
 
     @Override
@@ -86,14 +87,22 @@ public class GravarCorridaFragment extends Fragment {
         });
         btRefresh.setOnClickListener( (btn) -> {
             if(model.getIsPaused().getValue() && model.getSessionTime().getValue() > 0) {
-                showDialog();
+                if(neverSave){
+                    reset();
+                } else if(alwaysSave) {
+                    defaultSave();
+                    reset();
+                } else {
+                    showDialog();
+                }
             }
         });
 
-        final Observer<Integer> stepObserver = (step) -> {
+        model.getsessionSteps().observe(getViewLifecycleOwner(), (step) -> {
             tvTotalPassos.setText( String.format(Locale.ENGLISH, "%d", step) );
-        };
-        final Observer<Long> timeObserver = (milissec) -> {
+        });
+
+        model.getSessionTime().observe(getViewLifecycleOwner(), (milissec) -> {
             final long H = 3600 * 1000, M = 60 * 1000, S = 1000;
             long total = milissec;
             long hour = total / H;
@@ -103,15 +112,20 @@ public class GravarCorridaFragment extends Fragment {
             long sec = total / S;
             total -= sec * S;
             chronometer.setText( String.format(Locale.ENGLISH, "%02d:%02d:%02d,%02d", hour, min, sec, total / 10) );
+        });
 
-        };
-        final Observer<Boolean> pauseObserver = (isPaused) -> {
+        model.getIsPaused().observe(getViewLifecycleOwner(), (isPaused) -> {
             btStart.setImageResource( isPaused ? R.drawable.ic_play : R.drawable.ic_pause );
-        };
+        });
+    }
 
-        model.getsessionSteps().observe(getViewLifecycleOwner(), stepObserver);
-        model.getSessionTime().observe(getViewLifecycleOwner(), timeObserver);
-        model.getIsPaused().observe(getViewLifecycleOwner(), pauseObserver);
+    @Override
+    public void onResume() {
+        super.onResume();
+        SharedPreferences sharedPreferences = PreferenceManager
+                .getDefaultSharedPreferences(requireActivity());
+        neverSave = sharedPreferences.getBoolean(getString(R.string.nunca_salvar_corrida_key), false);
+        alwaysSave = sharedPreferences.getBoolean(getString(R.string.sempre_salvar_corrida_key), false);
     }
 
     private void showDialog() {
@@ -124,18 +138,15 @@ public class GravarCorridaFragment extends Fragment {
         nomeDialog.setView(layout);
 
         nomeDialog.setNegativeButton("Cancelar", (dialogInterface, btn_id) -> {
-            model.endRecord();
+            reset();
             dialogInterface.cancel();
-            setButtonsClickable(true);
         });
         nomeDialog.setPositiveButton("Confirmar", (dialogInterface, btn_id) -> {
-            model.saveRecord(edtTxt.getText().toString());
-            model.endRecord();
-            setButtonsClickable(true);
+            save(edtTxt.getText().toString());
+            reset();
         });
         nomeDialog.setOnDismissListener((dialogInterface) -> {
-            model.endRecord();
-            setButtonsClickable(true);
+            reset();
         });
         setButtonsClickable(false);
         nomeDialog.show();
@@ -146,7 +157,17 @@ public class GravarCorridaFragment extends Fragment {
         btRefresh.setClickable(clickable);
     }
 
+    private void save(String name) {
+        model.saveRecord(name);
+        Snackbar.make(getView().findViewById(R.id.coordinator_layout),"Corrida salva com sucesso", Snackbar.LENGTH_SHORT).show();
+    }
+
+    private void defaultSave() {
+        save("");
+    }
+
     private void reset() {
+        model.endRecord();
         setButtonsClickable(true);
     }
 }

@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">MarcaCorrida</string>
 
+    <!--Content-->
     <string name="title_activity_tab">TabActivity</string>
     <string name="tab_text_1">Tab 1</string>
     <string name="tab_text_2">Tab 2</string>
@@ -8,5 +9,22 @@
     <string name="title_gravar_corrida_fragment">Corrida</string>
     <string name="title_historico_fragment">Histórico</string>
     <string name="share">Compartilhar</string>
+
+
+    <!--Settings-->
+    <string name="settings">Configuracões</string>
+
+    <string name="sempre_salvar_corrida_key">sempre_salvar_corrida_key</string>
+    <string name="sempre_salvar_title">Sempre salvar corrida</string>
+    <string name="sempre_salvar_summary">Os dados da corrida sempre serão salvos</string>
+
+    <string name="nunca_salvar_corrida_key">nunca_salvar_corrida_key</string>
+    <string name="nunca_salvar_title">Nunca salvar corrida</string>
+    <string name="nunca_salvar_summary">Os dados da corrida nunca serão salvos</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="ok">Ok</string>
+    <string name="title_metas_fragment">Metas</string>
+
 
 </resources>

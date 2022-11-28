@@ -18,13 +18,8 @@ import android.view.MenuItem;
 
 
 import com.google.android.material.navigation.NavigationView;
-
-
-
 import com.marcacorrida.datasource.CorridaRepository;
-
 import com.marcacorrida.R;
-
 
 import java.io.IOException;
 

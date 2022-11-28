@@ -1,0 +1,67 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+
+    <PreferenceCategory
+        app:key="corrida_category"
+        app:title="@string/title_gravar_corrida_fragment">
+
+        <SwitchPreferenceCompat
+            app:key="@string/nunca_salvar_corrida_key"
+            app:title="@string/nunca_salvar_title"
+            app:summary="@string/nunca_salvar_summary"
+            app:defaultValue="false"
+            app:disableDependentsState="true" />
+
+        <SwitchPreferenceCompat
+            app:key="@string/sempre_salvar_corrida_key"
+            app:title="@string/sempre_salvar_title"
+            app:summary="@string/sempre_salvar_summary"
+            app:defaultValue="false"
+            app:dependency="@string/nunca_salvar_corrida_key" />
+
+        <!--
+        <SwitchPreferenceCompat
+            app:key="nome_automatico_corrida"
+            app:title="Nomear corrida"
+            app:summaryOff="O aplicativo pedirá um nome sempre que o contador for reiniciado"
+            app:summaryOn="O aplicativo escolherá um nome automáticamente"
+            app:defaultValue="false"
+            app:dependency="nunca_salvar_corrida" />
+        -->
+    </PreferenceCategory>
+
+    <!--
+    <PreferenceCategory app:title="@string/messages_header">
+
+        <EditTextPreference
+            app:key="signature"
+            app:title="@string/signature_title"
+            app:useSimpleSummaryProvider="true"
+            input/>
+
+        <ListPreference
+            app:defaultValue="reply"
+            app:entries="@array/reply_entries"
+            app:entryValues="@array/reply_values"
+            app:key="reply"
+            app:title="@string/reply_title"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/sync_header">
+
+        <SwitchPreferenceCompat
+            app:key="sync"
+            app:title="@string/sync_title" />
+
+        <SwitchPreferenceCompat
+            app:dependency="sync"
+            app:key="attachment"
+            app:summaryOff="@string/attachment_summary_off"
+            app:summaryOn="@string/attachment_summary_on"
+            app:title="@string/attachment_title" />
+
+    </PreferenceCategory>
+    -->
+</PreferenceScreen>
