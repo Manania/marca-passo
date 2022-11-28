@@ -25,6 +25,10 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="ok">Ok</string>
     <string name="title_metas_fragment">Metas</string>
+    <string name="corrida_nome">Nome</string>
+    <string name="corrida_duracao">Duração</string>
+    <string name="corrida_passos">Numero de Passos</string>
+    <string name="corrida_data">Data</string>
 
 
 </resources>

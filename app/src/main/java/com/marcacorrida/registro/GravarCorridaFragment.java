@@ -133,6 +133,7 @@ public class GravarCorridaFragment extends Fragment {
         LinearLayout layout = new LinearLayout(getContext());
         EditText edtTxt = new EditText(getContext());
         edtTxt.setHint("Nome da corrida");
+        edtTxt.setTextColor(ContextCompat.getColor(getContext(), R.color.black));
         layout.addView(edtTxt);
         layout.setOrientation(LinearLayout.VERTICAL);
         nomeDialog.setView(layout);
