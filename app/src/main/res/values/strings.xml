@@ -29,6 +29,8 @@
     <string name="corrida_duracao">Duração</string>
     <string name="corrida_passos">Numero de Passos</string>
     <string name="corrida_data">Data</string>
+    <string name="title_relatorio_fragment">Relatórios</string>
+    <string name="title_criar_metas_fragment">Criar metas</string>
 
 
 </resources>

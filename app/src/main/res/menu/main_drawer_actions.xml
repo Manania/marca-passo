@@ -3,12 +3,21 @@
 
     <item
         android:id="@+id/gravarCorridaFragment"
+        android:icon="@drawable/ic_footprint"
         android:title="@string/title_gravar_corrida_fragment" />
 
     <item
         android:id="@+id/historicoFragment"
-        android:title="Historico" />
+        android:icon="@drawable/ic_baseline_history_24"
+        android:title="@string/title_historico_fragment" />
 
-
+    <item
+        android:id="@+id/metasFragment"
+        android:title="@string/title_metas_fragment" />
+    <item
+        android:id="@+id/relatoriosFragment"
+        android:title="Relatórios"
+        android:icon="@drawable/timeline_fill0_wght400_grad0_opsz48"
+        />
 
 </menu>

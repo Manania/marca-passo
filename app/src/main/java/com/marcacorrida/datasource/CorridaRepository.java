@@ -202,8 +202,8 @@ public class CorridaRepository implements AutoCloseable {
      * @return zero ou mais Corridas
      */
     @NotNull
-    public List<Corrida> listar() {
-        String sortOrder =  CorridaEntry.DATA + " desc";
+    public List<Corrida> listar(boolean ordemCrescente) {
+        String sortOrder =  CorridaEntry.DATA + (ordemCrescente ? " asc" : " desc");
         String[] projection = {
                 CorridaEntry._ID,
                 CorridaEntry.NOME,

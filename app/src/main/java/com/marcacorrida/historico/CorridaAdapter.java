@@ -46,8 +46,12 @@ public class CorridaAdapter extends RecyclerView.Adapter<CorridaAdapter.CorridaV
             //holder.getTxtVwDuracao().setText( String.valueOf( item.getDuracao() /  1000f ) );
             holder.getTxtVwDuracao().setText( formatDuration(item.getDuracao()) );
             holder.getTxtVwData().setText(DDMMYY_FORMATER.format(item.getData()));
+        } else if(position == 0) {
+            holder.getTxtVwNome().setText(R.string.corrida_nome);
+            holder.getTxtVwPassos().setText(R.string.corrida_passos);
+            holder.getTxtVwDuracao().setText(R.string.corrida_duracao);
+            holder.getTxtVwData().setText(R.string.corrida_data);
         }
-
     }
 
     private static String formatDuration(long millis) {

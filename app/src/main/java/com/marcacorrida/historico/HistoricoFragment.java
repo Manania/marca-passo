@@ -53,7 +53,7 @@ public class HistoricoFragment extends Fragment {
         super.onResume();
         try(CorridaRepository repo = new CorridaRepository(getContext())) {
             recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-            recyclerView.setAdapter(new CorridaAdapter(repo.listar()));
+            recyclerView.setAdapter(new CorridaAdapter(repo.listar(false)));
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
         if(item.getItemId() == R.id.action_share) {
             //Compartilha o historico em formato JSON
             try(CorridaRepository repository = new CorridaRepository(getApplicationContext())) {
-                String export = repository.listar().toString();
+                String export = repository.listar(false).toString();
                 Intent sendIntent = new Intent();
                 sendIntent.setAction(Intent.ACTION_SEND);
                 sendIntent.putExtra(Intent.EXTRA_TEXT, export);

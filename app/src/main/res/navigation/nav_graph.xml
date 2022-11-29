@@ -19,5 +19,19 @@
         android:id="@+id/settingsFragment"
         android:name="com.marcacorrida.settings.SettingsFragment"
         android:label="@string/settings" />
-
+    <fragment
+        android:id="@+id/metasFragment"
+        android:name="com.marcacorrida.metas.MetasFragment"
+        android:label="@string/title_metas_fragment"
+        tools:layout="@layout/fragment_metas" />
+    <fragment
+        android:id="@+id/criarMetasFragment"
+        android:name="com.marcacorrida.metas.CriarMetasFragment"
+        android:label="@string/title_criar_metas_fragment"
+        tools:layout="@layout/fragment_criar_metas" />
+    <fragment
+        android:id="@+id/relatoriosFragment"
+        android:name="com.marcacorrida.relatorios.RelatoriosFragment"
+        android:label="@string/title_relatorio_fragment"
+        tools:layout="@layout/fragment_relatorios" />
 </navigation>
